@@ -79,7 +79,7 @@ jobs:
           $PIP install pyinstaller==5.13.2
 
           # === Pre-download OCR models ===
-          xvfb-run -a wine C:/python39/python.exe -c "from paddleocr import PaddleOCR; ocr = PaddleOCR(use_angle_cls=True, lang='ch', use_gpu=False); print('Models ready')"
+          xvfb-run -a wine C:/python39/python.exe -c "from paddleocr import PaddleOCR; ocr = PaddleOCR(lang='ch'); print('Models ready')"
 
           # === Build EXE ===
           xvfb-run -a wine C:/python39/python.exe -m PyInstaller vse-win7.spec --clean --noconfirm
