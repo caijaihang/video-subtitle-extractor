@@ -49,28 +49,35 @@ jobs:
           pip install Levenshtein==0.26.0 pysrt wordsegment tqdm PyYAML requests loguru imageio-ffmpeg pytz je-showinfilemanager==1.1.6a4 darkdetect chardet
 
           echo "=== Installing PyInstaller ==="
-          pip install pyinstaller>=6.11.0
+          pip install "pyinstaller>=6.11.0"
 
           echo "=== All dependencies installed ==="
           pip freeze
 
-      - name: Build EXE
+      - name: Build EXE (onedir)
         shell: cmd
         run: python -m PyInstaller vse-win7.spec --clean --noconfirm
+
+      - name: Verify build output
+        shell: bash
+        run: |
+          echo "=== Checking dist contents ==="
+          ls -lh dist/VideoSubtitleExtractor/ | head -20
+          if [ -f "dist/VideoSubtitleExtractor/VideoSubtitleExtractor.exe" ]; then
+            echo "=== EXE found ==="
+            ls -lh dist/VideoSubtitleExtractor/VideoSubtitleExtractor.exe
+          else
+            echo "ERROR: EXE not found!"
+            ls -la dist/ 2>/dev/null
+            exit 1
+          fi
 
       - name: Package as 7z
         shell: bash
         run: |
           cd dist
-          ls -lh
-          if [ -f "VideoSubtitleExtractor.exe" ]; then
-            7z a -t7z -mx=9 "vse-v${{ env.VERSION }}-win7.7z" VideoSubtitleExtractor.exe
-            ls -lh "vse-v${{ env.VERSION }}-win7.7z"
-          else
-            echo "ERROR: EXE not found in dist/"
-            ls -la dist/ 2>/dev/null || echo "dist/ does not exist"
-            exit 1
-          fi
+          7z a -t7z -mx=9 "vse-v${{ env.VERSION }}-win7.7z" VideoSubtitleExtractor/
+          ls -lh "vse-v${{ env.VERSION }}-win7.7z"
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
@@ -84,7 +91,7 @@ jobs:
         with:
           tag_name: "v${{ env.VERSION }}-win7"
           name: "VSE ${{ env.VERSION }} Win7"
-          body: "Single EXE, no install needed. Win7 SP1/8/10/11 (64-bit). Python 3.10 + PaddlePaddle 3.0.0 + PaddleOCR 3.4 + PyInstaller."
+          body: "Win7 SP1/8/10/11 (64-bit). Extract the 7z, run VideoSubtitleExtractor.exe. No install needed. Python 3.10 + PaddlePaddle 3.0.0 + PaddleOCR 3.4."
           files: dist/vse-v${{ env.VERSION }}-win7.7z
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
