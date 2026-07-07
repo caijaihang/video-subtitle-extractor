@@ -25,9 +25,13 @@ jobs:
           VERSION=$(sed -n 's/^VERSION = "\(.*\)"/\1/p' backend/config.py)
           echo "VERSION=$VERSION" >> $GITHUB_ENV
 
-      - name: Setup Wine, Python, dependencies, build and package
+      - name: Setup Wine, Python, deps, build, package
         run: |
           set -e
+
+          WINEPREFIX=/home/runner/.wine
+          WINEDIR=$WINEPREFIX/drive_c
+          PYDIR=$WINEDIR/python39
 
           # === Install Wine ===
           sudo dpkg --add-architecture i386
@@ -37,67 +41,48 @@ jobs:
           # === Init Wine ===
           export WINEARCH=win64
           export WINEDEBUG=-all
-          export WINEPREFIX=/home/runner/.wine
+          export WINEPREFIX
           xvfb-run -a wine wineboot --init
           sleep 15
-          W=wine
 
           # === Embeddable Python ===
           wget -q "https://www.python.org/ftp/python/${PY_VER}/python-${PY_VER}-embed-amd64.zip" -O /tmp/pyembed.zip
-          mkdir -p /home/runner/.wine/drive_c/python39
-          unzip -q /tmp/pyembed.zip -d /home/runner/.wine/drive_c/python39
+          mkdir -p "$PYDIR"
+          unzip -q /tmp/pyembed.zip -d "$PYDIR"
 
-          # Enable import site so pip works
-          PTH=$(ls /home/runner/.wine/drive_c/python39/*._pth | head -1)
-          echo "--- PTH before ---"
-          cat "$PTH"
+          # Fix ._pth to enable site-packages
+          PTH=$(ls "$PYDIR"/*._pth | head -1)
           sed -i 's/^#import site/import site/' "$PTH"
-          # Also add Lib/site-packages path
           echo "Lib/site-packages" >> "$PTH"
-          echo "--- PTH after ---"
-          cat "$PTH"
 
-          # Install pip
-          wget -q "https://bootstrap.pypa.io/pip/3.9/get-pip.py" -O /tmp/get-pip.py
-          xvfb-run -a $W C:/python39/python.exe C:/python39/get-pip.py
-          echo "pip installed"
-          xvfb-run -a $W C:/python39/python.exe -m pip --version
+          # === Install pip (copy to Wine C: first) ===
+          wget -q "https://bootstrap.pypa.io/pip/3.9/get-pip.py" -O "$PYDIR/get-pip.py"
+          xvfb-run -a wine C:/python39/python.exe C:/python39/get-pip.py
 
-          # === Install dependencies ===
-          PIP="xvfb-run -a $W C:/python39/python.exe -m pip"
+          # Verify pip works
+          xvfb-run -a wine C:/python39/python.exe -m pip --version
 
+          # === Install all dependencies ===
+          PIP="xvfb-run -a wine C:/python39/python.exe -m pip"
           $PIP install --upgrade pip setuptools wheel
 
           $PIP install paddlepaddle==2.6.2 -i https://www.paddlepaddle.org.cn/packages/stable/cpu/
-          echo "PaddlePaddle done"
-
           $PIP install "paddleocr>=3.0.0,<4.0.0"
-          echo "PaddleOCR done"
-
           $PIP install PySide6==6.5.3 PySide6-Fluent-Widgets==1.5.5
-          echo "PySide6 done"
-
           $PIP install opencv-python==4.8.1.78 numpy==1.26.4 Pillow==10.4.0 scikit-image==0.22.0 shapely==2.0.4 pyclipper==1.3.0.post5 lmdb
-          echo "CV libs done"
 
-          # Mock lanms-neo (not used by VSE code)
-          SITEPKGS=/home/runner/.wine/drive_c/python39/Lib/site-packages
-          mkdir -p "$SITEPKGS/lanms"
-          touch "$SITEPKGS/lanms/__init__.py"
-          echo "lanms mock done"
+          # Mock lanms-neo
+          mkdir -p "$PYDIR/Lib/site-packages/lanms"
+          touch "$PYDIR/Lib/site-packages/lanms/__init__.py"
 
           $PIP install Levenshtein==0.26.0 pysrt wordsegment tqdm PyYAML requests loguru imageio-ffmpeg pytz je-showinfilemanager==1.1.6a4
-          echo "Util libs done"
-
           $PIP install pyinstaller==5.13.2
-          echo "PyInstaller done"
 
           # === Pre-download OCR models ===
-          xvfb-run -a $W C:/python39/python.exe -c "from paddleocr import PaddleOCR; ocr = PaddleOCR(use_angle_cls=True, lang='ch', use_gpu=False); print('Models ready')"
+          xvfb-run -a wine C:/python39/python.exe -c "from paddleocr import PaddleOCR; ocr = PaddleOCR(use_angle_cls=True, lang='ch', use_gpu=False); print('Models ready')"
 
           # === Build EXE ===
-          xvfb-run -a $W C:/python39/python.exe -m PyInstaller vse-win7.spec --clean --noconfirm
-          echo "Build done"
+          xvfb-run -a wine C:/python39/python.exe -m PyInstaller vse-win7.spec --clean --noconfirm
           ls -lh dist/
 
           # === Package ===
