@@ -7,13 +7,10 @@ permissions:
   contents: write
   packages: read
 
-env:
-  PY_VER: "3.10.11"
-
 jobs:
   build:
-    runs-on: ubuntu-24.04
-    timeout-minutes: 120
+    runs-on: windows-2022
+    timeout-minutes: 90
     steps:
       - uses: actions/checkout@v4
         with:
@@ -21,91 +18,59 @@ jobs:
 
       - name: Read VERSION
         id: version
+        shell: bash
         run: |
           VERSION=$(sed -n 's/^VERSION = "\(.*\)"/\1/p' backend/config.py)
           echo "VERSION=$VERSION" >> $GITHUB_ENV
 
-      - name: Build EXE (single step)
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.10"
+          architecture: "x64"
+
+      - name: Install all dependencies
+        shell: bash
         run: |
-          set -e
+          pip install --upgrade pip setuptools wheel
 
-          WINEPREFIX=/home/runner/.wine
-          WINEDIR=$WINEPREFIX/drive_c
-          PYDIR=$WINEDIR/python310
-          PYEXE="C:/python310/python.exe"
+          echo "=== Installing PaddlePaddle 3.0.0 CPU ==="
+          pip install paddlepaddle==3.0.0 -i https://www.paddlepaddle.org.cn/packages/stable/cpu/
 
-          # === Install Wine ===
-          sudo dpkg --add-architecture i386
-          sudo apt-get update -qq
-          sudo apt-get install -y -qq wine64 xvfb p7zip-full wget ca-certificates
+          echo "=== Installing PaddleOCR 3.4 ==="
+          pip install "paddleocr>=3.4.0,<4.0.0"
 
-          # === Init Wine ===
-          export WINEARCH=win64
-          export WINEDEBUG=-all
-          export WINEPREFIX
-          xvfb-run -a wine wineboot --init
-          sleep 15
+          echo "=== Installing PySide6 6.5.3 ==="
+          pip install PySide6==6.5.3 PySide6-Fluent-Widgets==1.5.5 qframelesswindow
 
-          # === Python 3.10 embeddable ===
-          wget -q "https://www.python.org/ftp/python/${PY_VER}/python-${PY_VER}-embed-amd64.zip" -O /tmp/pyembed.zip
-          mkdir -p "$PYDIR"
-          unzip -q /tmp/pyembed.zip -d "$PYDIR"
+          echo "=== Installing CV libs ==="
+          pip install opencv-python numpy Pillow scikit-image shapely pyclipper lmdb
 
-          # Enable site-packages
-          PTH=$(ls "$PYDIR"/*._pth | head -1)
-          sed -i 's/^#import site/import site/' "$PTH"
-          echo "Lib/site-packages" >> "$PTH"
+          echo "=== Installing util libs ==="
+          pip install Levenshtein==0.26.0 pysrt wordsegment tqdm PyYAML requests loguru imageio-ffmpeg pytz je-showinfilemanager==1.1.6a4 darkdetect chardet
 
-          # Install pip into Wine C: drive
-          wget -q "https://bootstrap.pypa.io/pip/3.10/get-pip.py" -O "$PYDIR/get-pip.py"
-          xvfb-run -a wine $PYEXE C:/python310/get-pip.py
-          xvfb-run -a wine $PYEXE -m pip --version
+          echo "=== Installing PyInstaller ==="
+          pip install pyinstaller==5.13.2
 
-          # === Install dependencies ===
-          PIP="xvfb-run -a wine $PYEXE -m pip"
-          $PIP install --upgrade pip setuptools wheel
+          echo "=== All dependencies installed ==="
+          pip freeze
 
-          # PaddlePaddle 3.0.0 CPU (compatible with PaddleOCR 3.4)
-          $PIP install paddlepaddle==3.0.0 -i https://www.paddlepaddle.org.cn/packages/stable/cpu/
-          echo "=== PaddlePaddle done ==="
+      - name: Build EXE
+        shell: cmd
+        run: python -m PyInstaller vse-win7.spec --clean --noconfirm
 
-          # PaddleOCR 3.4
-          $PIP install "paddleocr>=3.4.0,<4.0.0"
-          echo "=== PaddleOCR done ==="
-
-          # PySide6 6.5.3 (Win7 compatible)
-          $PIP install PySide6==6.5.3 PySide6-Fluent-Widgets==1.5.5
-          echo "=== PySide6 done ==="
-
-          # CV and data libs
-          $PIP install opencv-python numpy Pillow scikit-image shapely pyclipper lmdb
-          echo "=== CV libs done ==="
-
-          # Mock lanms-neo (VSE code never imports it)
-          mkdir -p "$PYDIR/Lib/site-packages/lanms"
-          touch "$PYDIR/Lib/site-packages/lanms/__init__.py"
-
-          # Util libs
-          $PIP install Levenshtein==0.26.0 pysrt wordsegment tqdm PyYAML requests loguru imageio-ffmpeg pytz je-showinfilemanager==1.1.6a4
-          echo "=== Utils done ==="
-
-          # PyInstaller
-          $PIP install pyinstaller==5.13.2
-          echo "=== PyInstaller done ==="
-
-          # Pre-download OCR models
-          xvfb-run -a wine $PYEXE -c "from paddleocr import PaddleOCR; ocr = PaddleOCR(lang='ch'); print('Models ready')"
-          echo "=== Models done ==="
-
-          # Build EXE
-          xvfb-run -a wine $PYEXE -m PyInstaller vse-win7.spec --clean --noconfirm
-          echo "=== Build done ==="
-          ls -lh dist/
-
-          # Package as 7z
+      - name: Package as 7z
+        shell: bash
+        run: |
           cd dist
-          7z a -t7z -mx=9 vse-v${{ env.VERSION }}-win7.7z VideoSubtitleExtractor.exe
-          ls -lh vse-v${{ env.VERSION }}-win7.7z
+          ls -lh
+          if [ -f "VideoSubtitleExtractor.exe" ]; then
+            7z a -t7z -mx=9 "vse-v${{ env.VERSION }}-win7.7z" VideoSubtitleExtractor.exe
+            ls -lh "vse-v${{ env.VERSION }}-win7.7z"
+          else
+            echo "ERROR: EXE not found in dist/"
+            ls -la dist/ 2>/dev/null || echo "dist/ does not exist"
+            exit 1
+          fi
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
@@ -119,7 +84,7 @@ jobs:
         with:
           tag_name: "v${{ env.VERSION }}-win7"
           name: "VSE ${{ env.VERSION }} Win7"
-          body: "Single EXE, no install needed, Win7 SP1/8/10/11 compatible. Built with Python 3.10 + PaddlePaddle 3.0.0 + PaddleOCR 3.4 + PyInstaller via Ubuntu+Wine."
+          body: "Single EXE, no install needed. Win7 SP1/8/10/11 (64-bit). Python 3.10 + PaddlePaddle 3.0.0 + PaddleOCR 3.4 + PyInstaller."
           files: dist/vse-v${{ env.VERSION }}-win7.7z
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
