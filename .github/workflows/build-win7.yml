@@ -2,11 +2,6 @@ name: Build Win7 EXE
 
 on:
   workflow_dispatch:
-    inputs:
-      ssh:
-        description: SSH for debugging
-        required: false
-        default: "false"
 
 permissions:
   contents: write
@@ -45,90 +40,46 @@ jobs:
           xvfb-run -a wine wineboot --init
           sleep 10
 
-      - name: Download and extract embeddable Python 3.9
+      - name: Download embeddable Python 3.9
         run: |
-          wget --show-progress -O python-embed.zip \
-            "https://www.python.org/ftp/python/${PY_VER}/python-${PY_VER}-embed-amd64.zip"
-          ls -la python-embed.zip
+          wget -q "https://www.python.org/ftp/python/${PY_VER}/python-${PY_VER}-embed-amd64.zip" -O python-embed.zip
           mkdir -p ~/.wine/drive_c/python39
           unzip -q python-embed.zip -d ~/.wine/drive_c/python39
-          ls -la ~/.wine/drive_c/python39/
-
-      - name: Enable pip for embeddable Python
-        run: |
-          PTH_FILE=$(ls ~/.wine/drive_c/python39/*._pth | head -1)
-          sed -i 's/^#import site/import site/' "$PTH_FILE"
-          cat "$PTH_FILE"
-
-      - name: Install pip
-        run: |
-          wget -q "https://bootstrap.pypa.io/pip/3.9/get-pip.py" \
-            -O ~/.wine/drive_c/python39/get-pip.py
+          PTH=$(ls ~/.wine/drive_c/python39/*._pth | head -1)
+          sed -i 's/^#import site/import site/' "$PTH"
+          wget -q "https://bootstrap.pypa.io/pip/3.9/get-pip.py" -O ~/.wine/drive_c/python39/get-pip.py
           xvfb-run -a wine C:\\python39\\python.exe C:\\python39\\get-pip.py
-          xvfb-run -a wine C:\\python39\\python.exe -m pip --version
 
-      - name: Install PaddlePaddle CPU (Win7 compatible)
-        run: |
-          xvfb-run -a wine C:\\python39\\python.exe -m pip install --upgrade pip
-          xvfb-run -a wine C:\\python39\\python.exe -m pip install \
-            paddlepaddle==2.6.2 \
-            -i https://www.paddlepaddle.org.cn/packages/stable/cpu/
+      - name: Install PaddlePaddle
+        run: xvfb-run -a wine C:\\python39\\python.exe -m pip install paddlepaddle==2.6.2 -i https://www.paddlepaddle.org.cn/packages/stable/cpu/
 
-      - name: Install project dependencies
-        run: |
-          xvfb-run -a wine C:\\python39\\python.exe -m pip install \
-            paddleocr>=3.0.0 \
-            PySide6==6.5.3 \
-            pyside6-fluent-widgets==1.5.5 \
-            qframelesswindow>=0.3.8 \
-            opencv-python==4.8.1.78 \
-            numpy==1.26.4 \
-            Pillow==10.4.0 \
-            scikit-image==0.22.0 \
-            lmdb==1.4.1 \
-            shapely==2.0.4 \
-            pyclipper==1.3.0.post5 \
-            lanms-neo==1.0.3 \
-            Levenshtein==0.26.0 \
-            pysrt==1.1.2 \
-            wordsegment==1.3.1 \
-            tqdm==4.67.1 \
-            PyYAML==6.0.1 \
-            requests==2.31.0 \
-            loguru==0.7.2 \
-            je-showinfilemanager==1.1.6a4 \
-            imageio-ffmpeg==0.4.9 \
-            pytz
-          echo "All dependencies installed"
+      - name: Install PaddleOCR
+        run: xvfb-run -a wine C:\\python39\\python.exe -m pip install "paddleocr>=3.0.0,<4.0.0"
+
+      - name: Install GUI framework
+        run: xvfb-run -a wine C:\\python39\\python.exe -m pip install PySide6==6.5.3 pyside6-fluent-widgets==1.5.5 qframelesswindow
+
+      - name: Install CV and data libs
+        run: xvfb-run -a wine C:\\python39\\python.exe -m pip install opencv-python==4.8.1.78 numpy==1.26.4 Pillow==10.4.0 scikit-image==0.22.0 shapely==2.0.4 pyclipper==1.3.0.post5 lanms-neo lmdb
+
+      - name: Install text and util libs
+        run: xvfb-run -a wine C:\\python39\\python.exe -m pip install Levenshtein==0.26.0 pysrt wordsegment tqdm PyYAML requests loguru imageio-ffmpeg pytz
 
       - name: Install PyInstaller
-        run: |
-          xvfb-run -a wine C:\\python39\\python.exe -m pip install pyinstaller==5.13.2
-          xvfb-run -a wine C:\\python39\\python.exe -m PyInstaller --version
+        run: xvfb-run -a wine C:\\python39\\python.exe -m pip install pyinstaller==5.13.2
 
       - name: Pre-download OCR models
-        run: |
-          xvfb-run -a wine C:\\python39\\python.exe -c \
-            "from paddleocr import PaddleOCR; ocr = PaddleOCR(use_angle_cls=True, lang='ch', use_gpu=False); print('OK')"
+        run: xvfb-run -a wine C:\\python39\\python.exe -c "from paddleocr import PaddleOCR; ocr = PaddleOCR(use_angle_cls=True, lang='ch', use_gpu=False); print('Models ready')"
 
-      - name: Build EXE with PyInstaller
-        run: |
-          xvfb-run -a wine C:\\python39\\python.exe -m PyInstaller \
-            vse-win7.spec --clean --noconfirm
-          ls -lh dist/
+      - name: Build EXE
+        run: xvfb-run -a wine C:\\python39\\python.exe -m PyInstaller vse-win7.spec --clean --noconfirm
 
-      - name: Package as 7z
+      - name: Package and upload
         run: |
           cd dist
-          if [ -f "VideoSubtitleExtractor.exe" ]; then
-            7z a -t7z -mx=9 -m0=LZMA2 \
-              vse-v${{ env.VERSION }}-win7.7z VideoSubtitleExtractor.exe
-            ls -lh vse-v${{ env.VERSION }}-win7.7z
-          else
-            echo "ERROR: EXE not found!"
-            ls -la dist/ || true
-            exit 1
-          fi
+          ls -lh
+          7z a -t7z -mx=9 vse-v${{ env.VERSION }}-win7.7z VideoSubtitleExtractor.exe
+          ls -lh vse-v${{ env.VERSION }}-win7.7z
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
@@ -141,18 +92,8 @@ jobs:
         uses: softprops/action-gh-release@v2
         with:
           tag_name: "v${{ env.VERSION }}-win7"
-          name: "VSE ${{ env.VERSION }} Win7 Compatible"
-          body: "Video Subtitle Extractor v${{ env.VERSION }} - Win7 Compatible. Single EXE, no installation needed. Built with Ubuntu+Wine+Python3.9 embeddable+PyInstaller."
+          name: "VSE ${{ env.VERSION }} Win7"
+          body: "Single EXE, no install needed, Win7 compatible."
           files: dist/vse-v${{ env.VERSION }}-win7.7z
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Summary
-        run: |
-          echo "## Build Complete v${{ env.VERSION }}-win7" >> $GITHUB_STEP_SUMMARY
-          echo "| Item | Value |" >> $GITHUB_STEP_SUMMARY
-          echo "|------|-------|" >> $GITHUB_STEP_SUMMARY
-          echo "| Python | ${{ env.PY_VER }} embeddable |" >> $GITHUB_STEP_SUMMARY
-          echo "| Build | Ubuntu 24.04 + Wine + PyInstaller 5.13.2 |" >> $GITHUB_STEP_SUMMARY
-          echo "| Output | Single EXE (Win7 compatible) |" >> $GITHUB_STEP_SUMMARY
-          echo "| Download | Releases or Artifacts |" >> $GITHUB_STEP_SUMMARY
