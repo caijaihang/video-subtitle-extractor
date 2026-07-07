@@ -49,7 +49,7 @@ jobs:
           pip install Levenshtein==0.26.0 pysrt wordsegment tqdm PyYAML requests loguru imageio-ffmpeg pytz je-showinfilemanager==1.1.6a4 darkdetect chardet
 
           echo "=== Installing PyInstaller ==="
-          pip install pyinstaller==5.13.2
+          pip install pyinstaller>=6.11.0
 
           echo "=== All dependencies installed ==="
           pip freeze
