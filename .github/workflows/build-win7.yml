@@ -8,7 +8,7 @@ permissions:
   packages: read
 
 env:
-  PY_VER: "3.9.13"
+  PY_VER: "3.10.11"
 
 jobs:
   build:
@@ -25,13 +25,14 @@ jobs:
           VERSION=$(sed -n 's/^VERSION = "\(.*\)"/\1/p' backend/config.py)
           echo "VERSION=$VERSION" >> $GITHUB_ENV
 
-      - name: Setup Wine, Python, deps, build, package
+      - name: Build EXE (single step)
         run: |
           set -e
 
           WINEPREFIX=/home/runner/.wine
           WINEDIR=$WINEPREFIX/drive_c
-          PYDIR=$WINEDIR/python39
+          PYDIR=$WINEDIR/python310
+          PYEXE="C:/python310/python.exe"
 
           # === Install Wine ===
           sudo dpkg --add-architecture i386
@@ -45,47 +46,63 @@ jobs:
           xvfb-run -a wine wineboot --init
           sleep 15
 
-          # === Embeddable Python ===
+          # === Python 3.10 embeddable ===
           wget -q "https://www.python.org/ftp/python/${PY_VER}/python-${PY_VER}-embed-amd64.zip" -O /tmp/pyembed.zip
           mkdir -p "$PYDIR"
           unzip -q /tmp/pyembed.zip -d "$PYDIR"
 
-          # Fix ._pth to enable site-packages
+          # Enable site-packages
           PTH=$(ls "$PYDIR"/*._pth | head -1)
           sed -i 's/^#import site/import site/' "$PTH"
           echo "Lib/site-packages" >> "$PTH"
 
-          # === Install pip (copy to Wine C: first) ===
-          wget -q "https://bootstrap.pypa.io/pip/3.9/get-pip.py" -O "$PYDIR/get-pip.py"
-          xvfb-run -a wine C:/python39/python.exe C:/python39/get-pip.py
+          # Install pip into Wine C: drive
+          wget -q "https://bootstrap.pypa.io/pip/3.10/get-pip.py" -O "$PYDIR/get-pip.py"
+          xvfb-run -a wine $PYEXE C:/python310/get-pip.py
+          xvfb-run -a wine $PYEXE -m pip --version
 
-          # Verify pip works
-          xvfb-run -a wine C:/python39/python.exe -m pip --version
-
-          # === Install all dependencies ===
-          PIP="xvfb-run -a wine C:/python39/python.exe -m pip"
+          # === Install dependencies ===
+          PIP="xvfb-run -a wine $PYEXE -m pip"
           $PIP install --upgrade pip setuptools wheel
 
-          $PIP install paddlepaddle==2.6.2 -i https://www.paddlepaddle.org.cn/packages/stable/cpu/
-          $PIP install "paddleocr>=3.0.0,<4.0.0"
-          $PIP install PySide6==6.5.3 PySide6-Fluent-Widgets==1.5.5
-          $PIP install opencv-python==4.8.1.78 numpy==1.26.4 Pillow==10.4.0 scikit-image==0.22.0 shapely==2.0.4 pyclipper==1.3.0.post5 lmdb
+          # PaddlePaddle 3.0.0 CPU (compatible with PaddleOCR 3.4)
+          $PIP install paddlepaddle==3.0.0 -i https://www.paddlepaddle.org.cn/packages/stable/cpu/
+          echo "=== PaddlePaddle done ==="
 
-          # Mock lanms-neo
+          # PaddleOCR 3.4
+          $PIP install "paddleocr>=3.4.0,<4.0.0"
+          echo "=== PaddleOCR done ==="
+
+          # PySide6 6.5.3 (Win7 compatible)
+          $PIP install PySide6==6.5.3 PySide6-Fluent-Widgets==1.5.5
+          echo "=== PySide6 done ==="
+
+          # CV and data libs
+          $PIP install opencv-python numpy Pillow scikit-image shapely pyclipper lmdb
+          echo "=== CV libs done ==="
+
+          # Mock lanms-neo (VSE code never imports it)
           mkdir -p "$PYDIR/Lib/site-packages/lanms"
           touch "$PYDIR/Lib/site-packages/lanms/__init__.py"
 
+          # Util libs
           $PIP install Levenshtein==0.26.0 pysrt wordsegment tqdm PyYAML requests loguru imageio-ffmpeg pytz je-showinfilemanager==1.1.6a4
+          echo "=== Utils done ==="
+
+          # PyInstaller
           $PIP install pyinstaller==5.13.2
+          echo "=== PyInstaller done ==="
 
-          # === Pre-download OCR models ===
-          xvfb-run -a wine C:/python39/python.exe -c "from paddleocr import PaddleOCR; ocr = PaddleOCR(lang='ch'); print('Models ready')"
+          # Pre-download OCR models
+          xvfb-run -a wine $PYEXE -c "from paddleocr import PaddleOCR; ocr = PaddleOCR(lang='ch'); print('Models ready')"
+          echo "=== Models done ==="
 
-          # === Build EXE ===
-          xvfb-run -a wine C:/python39/python.exe -m PyInstaller vse-win7.spec --clean --noconfirm
+          # Build EXE
+          xvfb-run -a wine $PYEXE -m PyInstaller vse-win7.spec --clean --noconfirm
+          echo "=== Build done ==="
           ls -lh dist/
 
-          # === Package ===
+          # Package as 7z
           cd dist
           7z a -t7z -mx=9 vse-v${{ env.VERSION }}-win7.7z VideoSubtitleExtractor.exe
           ls -lh vse-v${{ env.VERSION }}-win7.7z
@@ -102,7 +119,7 @@ jobs:
         with:
           tag_name: "v${{ env.VERSION }}-win7"
           name: "VSE ${{ env.VERSION }} Win7"
-          body: "Single EXE, no install needed, Win7 SP1/8/10/11 compatible."
+          body: "Single EXE, no install needed, Win7 SP1/8/10/11 compatible. Built with Python 3.10 + PaddlePaddle 3.0.0 + PaddleOCR 3.4 + PyInstaller via Ubuntu+Wine."
           files: dist/vse-v${{ env.VERSION }}-win7.7z
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
