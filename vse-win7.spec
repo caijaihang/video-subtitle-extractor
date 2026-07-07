@@ -15,7 +15,7 @@ paddle_hidden += collect_submodules('paddleocr')
 # Collect qfluentwidgets data
 qfw_datas = collect_data_files('qfluentwidgets')
 # Collect qframelesswindow
-qfw_datas += collect_data_files('qframelesswindow')
+qfw_datas += collect_data_files('PySide6-Frameless-Window')
 # Collect pytz for Win7 compat
 pytz_datas, pytz_bins, pytz_hidden = collect_all('pytz')
 
