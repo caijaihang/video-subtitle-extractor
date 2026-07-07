@@ -14,7 +14,7 @@ paddle_hidden += collect_submodules('paddleocr')
 # Collect qfluentwidgets data
 qfw_datas = collect_data_files('qfluentwidgets')
 # Collect qframelesswindow data (actual PyPI package name)
-qfw_datas += collect_data_files('qframelesswindow')
+qfw_datas += collect_data_files('PySideSix_Frameless_Window')
 # Collect pytz for timezone support
 pytz_datas, pytz_bins, pytz_hidden = collect_all('pytz')
 # Collect darkdetect for theme detection
