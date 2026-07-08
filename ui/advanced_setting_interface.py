@@ -31,7 +31,7 @@ class AdvancedSettingInterface(ScrollArea):
         
         # 设置滚动区域属性
         self.setWidget(self.scrollWidget)
-        self.enableTransparentBackground()
+        self.setAutoFillBackground(False)
         self.setWidgetResizable(True)
         self.setHorizontalScrollBarPolicy(QtCore.Qt.ScrollBarAlwaysOff)
         self.setVerticalScrollBarPolicy(QtCore.Qt.ScrollBarAsNeeded)
