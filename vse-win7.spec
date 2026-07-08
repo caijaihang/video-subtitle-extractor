@@ -71,7 +71,7 @@ a = Analysis(
         'matplotlib', 'scipy', 'IPython', 'jupyter', 'notebook',
         'pytest', 'sphinx', 'pip', 'wheel', 'selenium',
         'unittest', 'pydoc', 'xmlrpc', 'pydoc_data', 'antigravity',
-        'tkinter', 'test', 'tests', 'distutils', 'setuptools',
+        'tkinter', 'test', 'tests', 
         'idlelib', 'lib2to3',
         'PySide6', 'PySide6.QtCore', 'PySide6.QtWidgets', 'PySide6.QtGui',
         'PySideSix_Frameless_Window',
