@@ -1,62 +1,47 @@
 # -*- mode: python ; coding: utf-8 -*-
-"""PyInstaller spec - VSE Win7 Standalone Build (onedir mode)
-Includes Win7 compatibility shim for api-ms-win-core-path-l1-1-0.dll
-"""
+"""PyInstaller spec - VSE Win7 Build (onedir, PyQt5 + PaddlePaddle)"""
 import os
 from PyInstaller.utils.hooks import collect_data_files, collect_submodules, collect_all
 
 PROJECT_ROOT = os.path.dirname(os.path.abspath(SPEC))
 
-# === Collect package data ===
-# PySide6 (complete: DLLs, QML, plugins, translations)
-pyside6_datas, pyside6_bins, pyside6_hidden = collect_all('PySide6')
+# Collect PyQt5 (Qt5 - Win7 compatible)
+pyqt5_datas, pyqt5_bins, pyqt5_hidden = collect_all('PyQt5')
 
-# PaddlePaddle + PaddleOCR (complete for DLLs + models + configs)
+# Collect PyQt-Fluent-Widgets (PyQt5 version of qfluentwidgets)
+qfw_datas, qfw_bins, qfw_hidden = collect_all('qfluentwidgets')
+# PyQt5-Frameless-Window provides qframelesswindow module
+qframe_datas, qframe_bins, qframe_hidden = collect_all('PyQt5_Frameless_Window')
+
+# Collect PaddlePaddle + PaddleOCR
 paddle_datas, paddle_bins, paddle_hidden = collect_all('paddle')
 paddleocr_datas, paddleocr_bins, paddleocr_hidden = collect_all('paddleocr')
-
-# qfluentwidgets + qframelesswindow
-qfw_datas, qfw_bins, qfw_hidden = collect_all('qfluentwidgets')
-qframe_datas, qframe_bins, qframe_hidden = collect_all('PySideSix_Frameless_Window')
 
 # Utility packages
 pytz_datas, pytz_bins, pytz_hidden = collect_all('pytz')
 darkdetect_datas, darkdetect_bins, darkdetect_hidden = collect_all('darkdetect')
 imageio_ff_datas, imageio_ff_bins, imageio_ff_hidden = collect_all('imageio_ffmpeg')
 
-# === Win7 compatibility shim DLL ===
-# This DLL provides api-ms-win-core-path-l1-1-0.dll implementation for Win7
-# Source: https://github.com/nalexandru/api-ms-win-core-path-HACK
+# Win7 shim DLL
 win7_compat_dir = os.path.join(PROJECT_ROOT, 'win7_compat')
-win7_bins = []
-for dll in os.listdir(win7_compat_dir):
-    if dll.endswith('.dll'):
-        src = os.path.join(win7_compat_dir, dll)
-        # Place DLL at EXE root (not _internal) so Windows finds it first
-        win7_bins.append((src, '.'))
+win7_bins = [(os.path.join(win7_compat_dir, f), '.') for f in os.listdir(win7_compat_dir) if f.endswith('.dll')]
 
-# === Project files ===
+# Project files
 added_files = [
     (os.path.join(PROJECT_ROOT, 'backend'), 'backend'),
     (os.path.join(PROJECT_ROOT, 'design'), 'design'),
     (os.path.join(PROJECT_ROOT, 'ui'), 'ui'),
 ]
 
-# === Merge all ===
-all_binaries = (pyside6_bins + paddle_bins + paddleocr_bins + qfw_bins
-                 + qframe_bins + pytz_bins + darkdetect_bins + imageio_ff_bins
-                 + win7_bins)
-
-all_datas = (added_files + pyside6_datas + paddle_datas + paddleocr_datas
-             + qfw_datas + qframe_datas + pytz_datas + darkdetect_datas + imageio_ff_datas)
+all_binaries = (pyqt5_bins + qfw_bins + qframe_bins + paddle_bins + paddleocr_bins
+                 + pytz_bins + darkdetect_bins + imageio_ff_bins + win7_bins)
+all_datas = (added_files + pyqt5_datas + qfw_datas + qframe_datas + paddle_datas
+             + paddleocr_datas + pytz_datas + darkdetect_datas + imageio_ff_datas)
 
 all_hidden = ([
-    # PaddlePaddle / PaddleOCR
     'paddle', 'paddle.fluid', 'paddleocr', 'paddle.vision',
-    'paddleocr.text_detection',
-    # CV / Image
     'cv2', 'numpy', 'PIL', 'imageio', 'skimage',
-    # Internal backend
+    # Internal
     'backend', 'backend.config', 'backend.main',
     'backend.bean', 'backend.bean.subtitle_area',
     'backend.tools', 'backend.tools.ocr', 'backend.tools.constant',
@@ -69,7 +54,6 @@ all_hidden = ([
     'backend.tools.concurrent.task', 'backend.tools.concurrent.task_manager',
     'backend.tools.concurrent.future',
     'backend.sushi', 'backend.sushi.sushi_main', 'backend.sushi.subs',
-    # Internal UI
     'ui', 'ui.home_interface', 'ui.setting_interface',
     'ui.advanced_setting_interface', 'ui.timeline_sync_interface',
     'ui.component', 'ui.component.video_display_component',
@@ -81,10 +65,10 @@ all_hidden = ([
     'yaml', 'requests', 'tqdm', 'loguru', 'shapely', 'pyclipper',
     'pysrt', 'wordsegment', 'lmdb',
     'je_showinfilemanager', 'imageio_ffmpeg', 'Levenshtein',
-    # PySide6
-    'PySide6', 'PySide6.QtCore', 'PySide6.QtWidgets',
-    'PySide6.QtGui', 'PySide6.QtNetwork', 'PySide6.QtMultimedia',
-] + paddle_hidden + paddleocr_hidden + pyside6_hidden + qfw_hidden
+    # PyQt5
+    'PyQt5', 'PyQt5.QtCore', 'PyQt5.QtWidgets',
+    'PyQt5.QtGui', 'PyQt5.QtNetwork',
+] + paddle_hidden + paddleocr_hidden + pyqt5_hidden + qfw_hidden
     + qframe_hidden + pytz_hidden + darkdetect_hidden + imageio_ff_hidden)
 
 a = Analysis(
@@ -96,22 +80,18 @@ a = Analysis(
     hookspath=[],
     runtime_hooks=[os.path.join(PROJECT_ROOT, 'hook-runtime.py')],
     excludes=[
-        # Large unused packages
         'matplotlib', 'scipy', 'IPython', 'jupyter', 'notebook',
         'pytest', 'sphinx', 'pip', 'wheel', 'selenium',
-        # Unused stdlib
         'unittest', 'pydoc', 'xmlrpc', 'pydoc_data',
         'tkinter', 'test', 'tests',
-        # Unused PaddlePaddle modules
+        'PySide6', 'PySide6.QtCore', 'PySide6.QtWidgets', 'PySide6.QtGui',
+        'PySideSix_Frameless_Window',
         'paddle.vision.models', 'paddle.text', 'paddle.audio',
         'paddle.quantization', 'paddle.sparse',
         'paddle.fluid.contrib', 'paddle.fluid.layers',
-        'paddle.distributed', 'paddle.distribution',
-        'paddle.hapi', 'paddle.incubate',
-        # Unused CV
-        'IPython.display', 'matplotlib.pyplot',
-        # Unused network
-        'html5lib', 'bleach', 'webencodings',
+        'paddle.distributed', 'paddle.incubate',
+        'paddle.hapi',
+        'modelscope', 'transformers', 'fairseq', 'torch', 'torchvision',
     ],
     noarchive=False,
 )

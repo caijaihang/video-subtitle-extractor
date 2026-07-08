@@ -2,8 +2,8 @@
 import os
 from pathlib import Path
 
-from PySide6.QtCore import Qt, Signal
-from PySide6.QtWidgets import QWidget, QFileDialog, QHBoxLayout, QVBoxLayout, QSizePolicy
+from PyQt5.QtCore import Qt, pyqtSignal
+from PyQt5.QtWidgets import QWidget, QFileDialog, QHBoxLayout, QVBoxLayout, QSizePolicy
 from qfluentwidgets import (PushButton, ConfigValidator, ConfigItem, PlainTextEdit,
                           FluentIcon, CardWidget, SettingCardGroup, PushSettingCard, InfoBar)
 from backend.config import tr
@@ -18,7 +18,7 @@ class Option:
 
 class TimelineSyncInterface(QWidget):
 
-    append_log_signal = Signal(str)
+    append_log_signal = pyqtSignal(str)
     def __init__(self, parent):
         super().__init__()
         
@@ -81,11 +81,11 @@ class TimelineSyncInterface(QWidget):
         button_layout = QHBoxLayout()
         button_layout.setContentsMargins(16, 16, 16, 16)
         button_layout.setSpacing(8)
-        button_layout.setAlignment(Qt.AlignmentFlag.AlignLeft) 
+        button_layout.setAlignment(Qt.AlignLeft) 
         
         self.run_button = PushButton(tr['SubtitleExtractorGUI']['Run'], self)
         self.run_button.setIcon(FluentIcon.PLAY)
-        self.run_button.setSizePolicy(QSizePolicy.Policy.Fixed, QSizePolicy.Policy.Fixed)
+        self.run_button.setSizePolicy(QSizePolicy.Fixed, QSizePolicy.Fixed)
         self.run_button.clicked.connect(self.run_button_clicked)
         button_layout.addWidget(self.run_button)
         

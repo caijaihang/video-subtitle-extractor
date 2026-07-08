@@ -4,10 +4,10 @@ from enum import Enum, unique
 from dataclasses import dataclass
 from functools import cached_property
 
-from PySide6.QtWidgets import QWidget, QVBoxLayout, QAbstractItemView, QTableWidgetItem, QHeaderView
-from PySide6.QtCore import Qt, Signal, QModelIndex, QUrl
+from PyQt5.QtWidgets import QWidget, QVBoxLayout, QAbstractItemView, QTableWidgetItem, QHeaderView
+from PyQt5.QtCore import Qt, pyqtSignal, QModelIndex, QUrl
 from qfluentwidgets import TableWidget, InfoBar, RoundMenu
-from PySide6.QtGui import QAction, QColor, QBrush
+from PyQt5.QtGui import QAction, QColor, QBrush
 from showinfm import show_in_file_manager
 
 from backend.config import config, tr
@@ -58,8 +58,8 @@ class TaskListComponent(QWidget):
     """任务列表组件"""
     
     # 定义信号
-    task_selected = Signal(int, str)  # 任务被选中时发出信号，参数为任务索引和视频路径
-    task_deleted = Signal(int)  # 任务被删除时发出信号，参数为任务索引
+    task_selected = pyqtSignal(int, str)  # 任务被选中时发出信号，参数为任务索引和视频路径
+    task_deleted = pyqtSignal(int)  # 任务被删除时发出信号，参数为任务索引
     
     def __init__(self, parent=None):
         super().__init__(parent)

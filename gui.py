@@ -12,9 +12,9 @@ import os
 import configparser
 import cv2
 import multiprocessing
-from PySide6.QtCore import Qt, QTimer
-from PySide6 import QtCore, QtWidgets, QtGui
-from PySide6.QtWidgets import QApplication, QWidget
+from PyQt5.QtCore import Qt, QTimer
+from PyQt5 import QtCore, QtWidgets, QtGui
+from PyQt5.QtWidgets import QApplication, QWidget
 from qfluentwidgets import (FluentWindow, PushButton, Slider, ProgressBar, PlainTextEdit,
                           setTheme, Theme, FluentIcon, CardWidget, SettingCardGroup,
                           ComboBoxSettingCard, SwitchSettingCard, setThemeColor, OptionsConfigItem,
@@ -174,7 +174,7 @@ if __name__ == '__main__':
     multiprocessing.freeze_support()
     multiprocessing.set_start_method("spawn")
     QApplication.setHighDpiScaleFactorRoundingPolicy(
-    Qt.HighDpiScaleFactorRoundingPolicy.PassThrough)
+    Qt.PassThrough)
     app = QtWidgets.QApplication(sys.argv)
     app.setAttribute(Qt.AA_DontCreateNativeWidgetSiblings)
     window = SubtitleExtractorGUI()

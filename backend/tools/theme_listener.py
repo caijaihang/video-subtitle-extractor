@@ -1,4 +1,4 @@
-from PySide6 import QtCore, QtWidgets, QtGui
+from PyQt5 import QtCore, QtWidgets, QtGui
 
 from qfluentwidgets import setTheme, qconfig, Theme
 import darkdetect
@@ -7,7 +7,7 @@ import darkdetect
 class SystemThemeListener(QtCore.QThread):
     """ System theme listener """
 
-    systemThemeChanged = QtCore.Signal()
+    systemThemeChanged = QtCore.pyqtSignal()
 
     def __init__(self, parent=None):
         super().__init__(parent=parent)

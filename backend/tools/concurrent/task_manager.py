@@ -2,8 +2,8 @@ import functools
 import warnings
 from typing import Dict, List, Callable
 
-from PySide6 import QtCore
-from PySide6.QtCore import QThreadPool, QObject, QRunnable
+from PyQt5 import QtCore
+from PyQt5.QtCore import QThreadPool, QObject, QRunnable, Qt
 
 from .future import Future, FutureCancelled
 from .task import BaseTask, Task
@@ -39,7 +39,7 @@ class BaseTaskExecutor(QObject):
     def _taskRun(self, task: BaseTask, future: Future, **kwargs):
         self.tasks[self.taskCounter] = task
         future.setTaskID(self.taskCounter)
-        task.signal.finished.connect(self._taskDone, type=QtCore.Qt.ConnectionType.QueuedConnection)
+        task.signal.finished.connect(self._taskDone, type=Qt.QueuedConnection)
         self.threadPool.start(task)
         self.taskCounter += 1
 

@@ -1,4 +1,4 @@
-from PySide6 import QtWidgets
+from PyQt5 import QtWidgets
 from qfluentwidgets import (FluentWindow, PushButton, Slider, ProgressBar, PlainTextEdit,
                           setTheme, Theme, FluentIcon, CardWidget, SettingCardGroup,
                           ComboBoxSettingCard, SwitchSettingCard, RangeSettingCard,

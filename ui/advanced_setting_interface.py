@@ -3,8 +3,8 @@
 """
 import sys
 
-from PySide6 import QtWidgets, QtCore, QtGui
-from PySide6.QtWidgets import QFileDialog
+from PyQt5 import QtWidgets, QtCore, QtGui
+from PyQt5.QtWidgets import QFileDialog
 from qfluentwidgets import (ScrollArea, ExpandLayout, CardWidget, SubtitleLabel,
                            FluentIcon, NavigationWidget, NavigationItemPosition,
                            SettingCardGroup, RangeSettingCard, SwitchSettingCard,

@@ -1,6 +1,6 @@
 from typing import List, Optional, Callable, Iterable, Sized, Tuple, Union
 
-from PySide6.QtCore import QObject, Signal, QMutex, QSemaphore
+from PyQt5.QtCore import QObject, pyqtSignal, QMutex, QSemaphore
 
 
 class FutureError(BaseException):
@@ -49,11 +49,11 @@ class FutureCancelled(FutureError):
 
 
 class Future(QObject):
-    result = Signal(object)  # self
-    done = Signal(object)  # self
-    failed = Signal(object)  # self
-    partialDone = Signal(object)  # child future
-    childrenDone = Signal(object)  # self
+    result = pyqtSignal(object)  # self
+    done = pyqtSignal(object)  # self
+    failed = pyqtSignal(object)  # self
+    partialDone = pyqtSignal(object)  # child future
+    childrenDone = pyqtSignal(object)  # self
 
     def __init__(self, semaphore=0):
         super().__init__()

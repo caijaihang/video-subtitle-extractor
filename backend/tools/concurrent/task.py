@@ -1,13 +1,13 @@
 import functools
 from typing import Optional
 
-from PySide6.QtCore import QObject, Signal, QRunnable
+from PyQt5.QtCore import QObject, pyqtSignal, QRunnable
 
 from .future import Future
 
 
 class WorkerSignal(QObject):
-    finished = Signal(object)
+    finished = pyqtSignal(object)
 
 
 class BaseTask(QRunnable):

@@ -4,7 +4,7 @@ import os
 import sys
 import requests
 
-from PySide6.QtCore import QVersionNumber
+from PyQt5.QtCore import QVersionNumber
 
 from backend.config import VERSION, PROJECT_UPDATE_URLS, tr
 

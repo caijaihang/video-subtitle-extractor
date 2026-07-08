@@ -1,9 +1,9 @@
 import sys
 import cv2
-from PySide6.QtWidgets import QWidget, QVBoxLayout
-from PySide6.QtCore import Qt, Signal, QRect, QRectF, QObject, QEvent
-from PySide6.QtGui import QAction, QShortcut, QCursor
-from PySide6 import QtCore, QtWidgets, QtGui 
+from PyQt5.QtWidgets import QWidget, QVBoxLayout
+from PyQt5.QtCore import Qt, pyqtSignal, QRect, QRectF, QObject, QEvent
+from PyQt5.QtGui import QAction, QShortcut, QCursor
+from PyQt5 import QtCore, QtWidgets, QtGui 
 from qfluentwidgets import qconfig, CardWidget, HollowHandleStyle, RoundMenu
 
 from backend.config import config, tr
@@ -13,8 +13,8 @@ class VideoDisplayComponent(QWidget):
     """视频显示组件，包含视频预览和选择框功能"""
     
     # 定义信号
-    selections_changed = Signal(list)  # 选择框变化信号
-    ab_sections_changed = Signal(list)  # AB分区变化信号
+    selections_changed = pyqtSignal(list)  # 选择框变化信号
+    ab_sections_changed = pyqtSignal(list)  # AB分区变化信号
     
     def __init__(self, parent=None):
         super().__init__(parent)
