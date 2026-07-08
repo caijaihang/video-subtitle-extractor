@@ -9,7 +9,7 @@ permissions:
 
 jobs:
   build:
-    runs-on: windows-2022
+    runs-on: windows-2019
     timeout-minutes: 90
     steps:
       - uses: actions/checkout@v4
@@ -33,25 +33,24 @@ jobs:
         run: |
           pip install --upgrade pip setuptools wheel
 
-          echo "=== Installing PaddlePaddle 3.0.0 CPU ==="
+          echo "=== PaddlePaddle 3.0.0 CPU ==="
           pip install paddlepaddle==3.0.0 -i https://www.paddlepaddle.org.cn/packages/stable/cpu/
 
-          echo "=== Installing PaddleOCR 3.4 ==="
+          echo "=== PaddleOCR 3.4 ==="
           pip install "paddleocr>=3.4.0,<4.0.0"
 
-          echo "=== Installing PySide6 6.5.3 ==="
+          echo "=== PySide6 6.5.3 ==="
           pip install PySide6==6.5.3 PySide6-Fluent-Widgets==1.5.5
 
-          echo "=== Installing CV libs ==="
+          echo "=== CV libs ==="
           pip install opencv-python numpy Pillow scikit-image shapely pyclipper lmdb
 
-          echo "=== Installing util libs ==="
+          echo "=== Util libs ==="
           pip install Levenshtein==0.26.0 pysrt wordsegment tqdm PyYAML requests loguru imageio-ffmpeg pytz je-showinfilemanager==1.1.6a4 darkdetect chardet
 
-          echo "=== Installing PyInstaller ==="
+          echo "=== PyInstaller ==="
           pip install "pyinstaller>=6.11.0"
 
-          echo "=== All dependencies installed ==="
           pip freeze
 
       - name: Build EXE (onedir)
@@ -61,22 +60,27 @@ jobs:
       - name: Verify build output
         shell: bash
         run: |
-          echo "=== Checking dist contents ==="
-          ls -lh dist/VideoSubtitleExtractor/ | head -20
+          echo "=== dist contents ==="
+          ls -lh dist/VideoSubtitleExtractor/ | head -15
           if [ -f "dist/VideoSubtitleExtractor/VideoSubtitleExtractor.exe" ]; then
             echo "=== EXE found ==="
             ls -lh dist/VideoSubtitleExtractor/VideoSubtitleExtractor.exe
+            echo "=== Win7 shim DLL ==="
+            ls -lh dist/VideoSubtitleExtractor/api-ms-win-core-path-l1-1-0.dll 2>/dev/null || echo "shim at root"
+            ls -lh dist/VideoSubtitleExtractor/_internal/api-ms-win-core-path-l1-1-0.dll 2>/dev/null || echo "shim in _internal"
           else
             echo "ERROR: EXE not found!"
             ls -la dist/ 2>/dev/null
             exit 1
           fi
+          echo "=== Total size ==="
+          du -sh dist/VideoSubtitleExtractor/
 
-      - name: Package as 7z
+      - name: Package as 7z (max compression)
         shell: bash
         run: |
           cd dist
-          7z a -t7z -mx=9 "vse-v${{ env.VERSION }}-win7.7z" VideoSubtitleExtractor/
+          7z a -t7z -mx=9 -m0=LZMA2 "vse-v${{ env.VERSION }}-win7.7z" VideoSubtitleExtractor/
           ls -lh "vse-v${{ env.VERSION }}-win7.7z"
 
       - name: Upload artifact
@@ -91,7 +95,7 @@ jobs:
         with:
           tag_name: "v${{ env.VERSION }}-win7"
           name: "VSE ${{ env.VERSION }} Win7"
-          body: "Win7 SP1/8/10/11 (64-bit). Extract the 7z, run VideoSubtitleExtractor.exe. No install needed. Python 3.10 + PaddlePaddle 3.0.0 + PaddleOCR 3.4."
+          body: "Win7 SP1/8/10/11 (64-bit). Extract 7z, run VideoSubtitleExtractor.exe. Includes Win7 compatibility shim. No install needed."
           files: dist/vse-v${{ env.VERSION }}-win7.7z
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
