@@ -5,7 +5,7 @@ import multiprocessing
 import time
 import traceback
 from PyQt5.QtWidgets import QWidget, QHBoxLayout, QVBoxLayout
-from PyQt5.QtCore import pyqtSlot, QRect, pyqtSignal
+from PyQt5.QtCore import QRect, pyqtSignal
 from PyQt5.QtGui import QTextCharFormat, QColor
 from PyQt5 import QtWidgets
 from qfluentwidgets import (PushButton, CardWidget, PlainTextEdit, FluentIcon)
@@ -467,7 +467,6 @@ class HomeInterface(QWidget):
             subtitle_extractor_remote_caller.stop()
         return process
 
-    @pyqtSlot()
     def processing_finished(self):
         pending_tasks = self.task_list_component.get_pending_tasks()
         if pending_tasks:
@@ -482,7 +481,6 @@ class HomeInterface(QWidget):
         # 重置当前处理任务索引
         self.current_processing_task_index = -1
 
-    @pyqtSlot(int, bool)
     def update_progress(self, progress_remover, progress_finder, progress_total, isFinished, progress_post=0):
         try:
             pos = min(self.frame_count - 1, int(progress_remover / 100 * self.frame_count))
@@ -511,7 +509,6 @@ class HomeInterface(QWidget):
             # 捕获任何异常，防止崩溃
             print(f"更新进度时出错: {str(e)}")
 
-    @pyqtSlot(list)
     def append_log(self, log):
         self.append_output(*log)
 
@@ -548,7 +545,6 @@ class HomeInterface(QWidget):
             scrollbar = self.output_text.verticalScrollBar()
             scrollbar.setValue(scrollbar.maximum())
 
-    @pyqtSlot(object)
     def on_task_error(self, e):
         self.append_output(tr['SubtitleExtractorGUI']['ErrorDuringProcessing'].format(str(e)))
         if self.current_processing_task_index >= 0:
