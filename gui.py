@@ -173,8 +173,10 @@ class SubtitleExtractorGUI(FluentWindow):
 if __name__ == '__main__':
     multiprocessing.freeze_support()
     multiprocessing.set_start_method("spawn")
-    QApplication.setHighDpiScaleFactorRoundingPolicy(
-    Qt.PassThrough)
+    # PyQt5 HighDPI support
+    QtWidgets.QApplication.setAttribute(Qt.AA_EnableHighDpiScaling)
+    QtWidgets.QApplication.setAttribute(Qt.AA_UseHighDpiPixmaps)
+    # Removed: 
     app = QtWidgets.QApplication(sys.argv)
     app.setAttribute(Qt.AA_DontCreateNativeWidgetSiblings)
     window = SubtitleExtractorGUI()
