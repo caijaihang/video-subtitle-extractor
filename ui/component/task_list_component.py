@@ -7,7 +7,8 @@ from functools import cached_property
 from PyQt5.QtWidgets import QWidget, QVBoxLayout, QAbstractItemView, QTableWidgetItem, QHeaderView
 from PyQt5.QtCore import Qt, pyqtSignal, QModelIndex, QUrl
 from qfluentwidgets import TableWidget, InfoBar, RoundMenu
-from PyQt5.QtGui import QAction, QColor, QBrush
+from PyQt5.QtWidgets import QAction
+from PyQt5.QtGui import QColor, QBrush
 from showinfm import show_in_file_manager
 
 from backend.config import config, tr

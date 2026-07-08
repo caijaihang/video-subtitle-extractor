@@ -2,7 +2,8 @@ import sys
 import cv2
 from PyQt5.QtWidgets import QWidget, QVBoxLayout
 from PyQt5.QtCore import Qt, pyqtSignal, QRect, QRectF, QObject, QEvent
-from PyQt5.QtGui import QAction, QShortcut, QCursor
+from PyQt5.QtWidgets import QAction, QShortcut
+from PyQt5.QtGui import QCursor
 from PyQt5 import QtCore, QtWidgets, QtGui 
 from qfluentwidgets import qconfig, CardWidget, HollowHandleStyle, RoundMenu
 
