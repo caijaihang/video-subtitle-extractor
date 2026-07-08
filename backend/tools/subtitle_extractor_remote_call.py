@@ -22,12 +22,18 @@ class SubtitleExtractorRemoteCall:
     def run(self):
         try:
             while self.running:
-                cmd, args = self.queue.get(block=True)
-                if cmd == Command.FINISH:
-                    break
-                callback = self.callbacks.get(cmd)
-                if callback:
-                    callback(*args)
+                try:
+                    cmd, args = self.queue.get(block=True, timeout=1)
+                except:
+                    continue
+                try:
+                    if cmd == Command.FINISH:
+                        break
+                    callback = self.callbacks.get(cmd)
+                    if callback:
+                        callback(*args)
+                except Exception:
+                    pass
         finally:
             self.running = False
 

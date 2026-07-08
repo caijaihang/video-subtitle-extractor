@@ -551,30 +551,31 @@ class HomeInterface(QWidget):
             self.task_list_component.update_task_status(self.current_processing_task_index, TaskStatus.FAILED)
 
     def load_video(self, video_path):
-        self.video_path = video_path
-        if self.video_cap:
-            self.video_cap.release()
-            self.video_cap = None
-        self.video_cap = cv2.VideoCapture(self.video_path)
-        if not self.video_cap.isOpened():
+        try:
+            self.video_path = video_path
+            if self.video_cap:
+                self.video_cap.release()
+                self.video_cap = None
+            self.video_cap = cv2.VideoCapture(self.video_path)
+            if not self.video_cap.isOpened():
+                return False
+            ret, frame = self.video_cap.read()
+            if not ret:
+                return False
+            self.frame_count = int(self.video_cap.get(cv2.CAP_PROP_FRAME_COUNT))
+            self.frame_height = int(self.video_cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
+            self.frame_width = int(self.video_cap.get(cv2.CAP_PROP_FRAME_WIDTH))
+            self.fps = self.video_cap.get(cv2.CAP_PROP_FPS)
+            if self.fps <= 0:
+                self.fps = 30.0  # fallback default
+            
+            self.update_preview(frame)
+            self.video_slider.setMaximum(self.frame_count)
+            self.video_slider.setValue(1)
+            self.video_display_component.set_dragger_enabled(True)
+            return True
+        except Exception:
             return False
-        ret, frame = self.video_cap.read()
-        if not ret:
-            return False
-        self.frame_count = int(self.video_cap.get(cv2.CAP_PROP_FRAME_COUNT))
-        self.frame_height = int(self.video_cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
-        self.frame_width = int(self.video_cap.get(cv2.CAP_PROP_FRAME_WIDTH))
-        self.fps = self.video_cap.get(cv2.CAP_PROP_FPS)
-        
-        self.update_preview(frame)
-        self.video_slider.setMaximum(self.frame_count)
-        self.video_slider.setValue(1)
-        self.video_display_component.set_dragger_enabled(True)
-        return True
-        self.video_slider.setMaximum(self.frame_count)
-        self.video_slider.setValue(1)
-        self.video_display_component.set_dragger_enabled(True)
-        return True
 
 
     def open_file(self):

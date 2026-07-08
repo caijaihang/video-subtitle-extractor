@@ -215,7 +215,7 @@ class VideoDisplayComponent(QWidget):
         rgb_frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
         h, w, ch = rgb_frame.shape
         bytes_per_line = ch * w
-        image = QtGui.QImage(rgb_frame.data, w, h, bytes_per_line, QtGui.QImage.Format_RGB888)
+        image = QtGui.QImage(rgb_frame.data, w, h, bytes_per_line, QtGui.QImage.Format_RGB888).copy()
         pix = QtGui.QPixmap.fromImage(image)
         
         # 创建带圆角的图像
