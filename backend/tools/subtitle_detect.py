@@ -18,7 +18,7 @@ class SubtitleDetect:
         hardware_accelerator = HardwareAccelerator.instance()
         model_config = PaddleModelConfig(hardware_accelerator)
         # 使用 TextDetection 公开 API（PaddleOCR 3.x）
-        kwargs = {'model_dir': model_config.DET_MODEL_PATH}
+        kwargs = {'model_dir': model_config.DET_MODEL_PATH, 'enable_memory_optim': True}
         if model_config.DET_MODEL_NAME:
             kwargs['model_name'] = model_config.DET_MODEL_NAME
         self.text_detector = TextDetection(**kwargs)

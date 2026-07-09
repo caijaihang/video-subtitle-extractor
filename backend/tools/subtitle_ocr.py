@@ -1,3 +1,4 @@
+import gc
 import os
 import re
 from multiprocessing import Queue, Process
@@ -134,6 +135,7 @@ def ocr_task_consumer(ocr_queue, raw_subtitle_path, sub_area, video_path, option
     data = {'i': 1}
     # 初始化文本识别对象
     text_recogniser = OcrRecogniser()
+    import gc; gc.collect()  # 释放模型加载期间的临时内存
     text_recogniser.hardware_accelerator = options.HARDWARD_ACCELERATOR
     # 丢失字幕的存储路径
     ocr_loss_debug_path = os.path.join(os.path.abspath(os.path.splitext(video_path)[0]), 'loss')
@@ -231,7 +233,7 @@ def subtitle_extract_handler(task_queue, progress_queue, video_path, raw_subtitl
     if os.path.exists(raw_subtitle_path):
         os.remove(raw_subtitle_path)
     # 创建一个OCR队列，大小建议值8-20
-    ocr_queue = queue.Queue(20)
+    ocr_queue = queue.Queue(5)
     # 创建一个OCR事件生产者线程
     ocr_event_producer_thread = Thread(target=ocr_task_producer,
                                        args=(ocr_queue, task_queue, progress_queue, video_path, raw_subtitle_path,),
