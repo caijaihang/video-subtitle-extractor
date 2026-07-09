@@ -30,3 +30,25 @@ if getattr(sys, 'frozen', False):
         d = os.path.join(exe_dir, subdir)
         if not os.path.exists(d):
             os.makedirs(d)
+
+    # Pre-import stdlib submodules that PaddlePaddle may need at runtime
+    import importlib
+    _stdlib_preloads = [
+        'logging.handlers', 'logging.config',
+        'xml.etree.ElementTree', 'xml.dom.minidom',
+        'importlib.metadata', 'importlib.resources',
+        'ctypes.wintypes',
+        'urllib.parse', 'urllib.request',
+        'http.client', 'email.utils',
+        'collections.abc', 'concurrent.futures',
+        'pathlib', 'tempfile', 'shutil',
+        'argparse', 'configparser', 'csv', 'ssl', 'hashlib',
+        'decimal', 'fractions', 'pprint', 'reprlib',
+        'struct', 'codecs', 'unicodedata',
+        'queue', 'threading',
+    ]
+    for mod_name in _stdlib_preloads:
+        try:
+            importlib.import_module(mod_name)
+        except Exception:
+            pass

@@ -31,6 +31,21 @@ all_datas = (added_files + pyqt5_datas + qfw_datas + qframe_datas + paddle_datas
              + paddleocr_datas + pytz_datas + darkdetect_datas + imageio_ff_datas)
 
 all_hidden = ([
+    # stdlib submodules (PaddlePaddle dynamic imports)
+    'logging', 'logging.handlers', 'logging.config',
+    'queue', 'threading', 'ctypes', 'ctypes.wintypes',
+    'xml.etree.ElementTree', 'xml.dom', 'xml.dom.minidom',
+    'importlib', 'importlib.metadata', 'importlib.resources',
+    'pathlib', 'tempfile', 'shutil',
+    'argparse', 'configparser', 'csv', 'json', 'ssl', 'hashlib',
+    'io', 'os', 'sys', 're', 'math', 'time', 'datetime', 'calendar',
+    'decimal', 'fractions', 'numbers', 'copy', 'pprint', 'reprlib',
+    'struct', 'codecs', 'unicodedata',
+    'http', 'http.client', 'urllib', 'urllib.parse', 'urllib.request',
+    'email', 'email.utils',
+    'collections', 'collections.abc', 'collections.defaultdict',
+    'concurrent', 'concurrent.futures', 'concurrent.futures.thread',
+
     'paddle', 'paddle.fluid', 'paddleocr', 'paddle.vision',
     'cv2', 'numpy', 'PIL', 'imageio', 'skimage',
     'backend', 'backend.config', 'backend.main',
