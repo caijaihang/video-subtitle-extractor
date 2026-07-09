@@ -68,13 +68,18 @@ a = Analysis(
     hookspath=[],
     runtime_hooks=[os.path.join(PROJECT_ROOT, 'hook-runtime.py')],
     excludes=[
+        # Large third-party (safe to exclude)
         'matplotlib', 'scipy', 'IPython', 'jupyter', 'notebook',
-        'pytest', 'sphinx', 'pip', 'wheel', 'selenium',
-        'unittest', 'pydoc', 'xmlrpc', 'pydoc_data', 'antigravity',
-        'tkinter', 'test', 'tests', 
-        'idlelib', 'lib2to3',
+        'pytest', 'sphinx', 'selenium',
+        'modelscope', 'transformers', 'fairseq', 'torch', 'torchvision',
+        'tensorflow', 'onnx', 'onnxruntime',
+        'html5lib', 'bleach', 'webencodings', 'bs4',
+        'tiff', 'tifffile',
+        'sklearn', 'scikit_learn',
+        # PySide6 remnants
         'PySide6', 'PySide6.QtCore', 'PySide6.QtWidgets', 'PySide6.QtGui',
         'PySideSix_Frameless_Window',
+        # Unused PaddlePaddle modules
         'paddle.vision.models', 'paddle.text', 'paddle.audio',
         'paddle.quantization', 'paddle.sparse',
         'paddle.fluid.contrib', 'paddle.fluid.layers',
@@ -82,11 +87,6 @@ a = Analysis(
         'paddle.fluid.transpiler', 'paddle.fluid.io',
         'paddle.optimizer', 'paddle.nn.quantization',
         'paddle.incubate.autograd',
-        'modelscope', 'transformers', 'fairseq', 'torch', 'torchvision',
-        'tensorflow', 'onnx', 'onnxruntime',
-        'html5lib', 'bleach', 'webencodings', 'bs4',
-        'tiff', 'tifffile',
-        'sklearn', 'scikit_learn',
     ],
     noarchive=False,
 )
