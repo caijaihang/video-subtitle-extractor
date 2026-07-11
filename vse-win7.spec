@@ -36,6 +36,8 @@ qframe_datas, qframe_bins, qframe_hidden = collect_all('PyQt5_Frameless_Window')
 paddle_datas, paddle_bins, paddle_hidden = collect_all('paddle')
 paddleocr_datas, paddleocr_bins, paddleocr_hidden = collect_all('paddleocr')
 pytz_datas, pytz_bins, pytz_hidden = collect_all('pytz')
+pydantic_datas, pydantic_bins, pydantic_hidden = collect_all('pydantic')
+pydanticcore_datas, pydanticcore_bins, pydanticcore_hidden = collect_all('pydantic_core')
 darkdetect_datas, darkdetect_bins, darkdetect_hidden = collect_all('darkdetect')
 imageio_ff_datas, imageio_ff_bins, imageio_ff_hidden = collect_all('imageio_ffmpeg')
 
@@ -49,9 +51,9 @@ added_files = [
 ]
 
 all_binaries = (pyqt5_bins + qfw_bins + qframe_bins + paddle_bins + paddleocr_bins
-                 + pytz_bins + darkdetect_bins + imageio_ff_bins + win7_bins)
+                 + pytz_bins + pydantic_bins + pydanticcore_bins + darkdetect_bins + imageio_ff_bins + win7_bins)
 all_datas = (added_files + pyqt5_datas + qfw_datas + qframe_datas + paddle_datas
-             + paddleocr_datas + pytz_datas + darkdetect_datas + imageio_ff_datas)
+             + paddleocr_datas + pytz_datas + pydantic_datas + pydanticcore_datas + darkdetect_datas + imageio_ff_datas)
 
 all_hidden = ([
     # Auto-discovered stdlib submodules
@@ -530,11 +532,12 @@ all_hidden = ([
     'ui.icon', 'ui.icon.my_fluent_icon',
     'qfluentwidgets', 'qframelesswindow', 'qframelesswindow.utils',
     'darkdetect', 'chardet',
+    'pydantic', 'pydantic_core', 'pydantic.v1', 'pydantic.version',
     'yaml', 'requests', 'tqdm', 'loguru', 'shapely', 'pyclipper',
     'pysrt', 'wordsegment', 'lmdb',
     'je_showinfilemanager', 'imageio_ffmpeg', 'Levenshtein',
     'PyQt5', 'PyQt5.QtCore', 'PyQt5.QtWidgets', 'PyQt5.QtGui', 'PyQt5.QtNetwork',
-] + paddle_hidden + paddleocr_hidden + pyqt5_hidden + qfw_hidden
+] + paddle_hidden + paddleocr_hidden + pyqt5_hidden + qfw_hidden + pydantic_hidden + pydanticcore_hidden
     + qframe_hidden + pytz_hidden + darkdetect_hidden + imageio_ff_hidden)
 
 a = Analysis(
